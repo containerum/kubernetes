@@ -154,6 +154,8 @@ const (
 	MastersGroup = "system:masters"
 	// NodesGroup defines the well-known group for all nodes.
 	NodesGroup = "system:nodes"
+	// NodesUserPrefix defines the user name prefix as requested by the Node authorizer.
+	NodesUserPrefix = "system:node:"
 	// NodesClusterRoleBinding defines the well-known ClusterRoleBinding which binds the too permissive system:node
 	// ClusterRole to the system:nodes group. Since kubeadm is using the Node Authorizer, this ClusterRoleBinding's
 	// system:nodes group subject is removed if present.
@@ -187,10 +189,24 @@ const (
 	AnnotationKubeadmCRISocket = "kubeadm.alpha.kubernetes.io/cri-socket"
 
 	// InitConfigurationConfigMap specifies in what ConfigMap in the kube-system namespace the `kubeadm init` configuration should be stored
+	// TODO: Rename this to KubeadmConfigConfigMap
 	InitConfigurationConfigMap = "kubeadm-config"
 
 	// InitConfigurationConfigMapKey specifies in what ConfigMap key the master configuration should be stored
-	InitConfigurationConfigMapKey = "InitConfiguration"
+	// TODO: This was used in v1.11 with vi1alpha2 config and older. Remove in v1.13
+	InitConfigurationConfigMapKey = "MasterConfiguration"
+
+	// ClusterConfigurationConfigMapKey specifies in what ConfigMap key the cluster configuration should be stored
+	ClusterConfigurationConfigMapKey = "ClusterConfiguration"
+
+	// ClusterStatusConfigMapKey specifies in what ConfigMap key the cluster status should be stored
+	ClusterStatusConfigMapKey = "ClusterStatus"
+
+	// KubeProxyConfigMap specifies in what ConfigMap in the kube-system namespace the kube-proxy configuration should be stored
+	KubeProxyConfigMap = "kube-proxy"
+
+	// KubeProxyConfigMapKey specifies in what ConfigMap key the component config of kube-proxy should be stored
+	KubeProxyConfigMapKey = "config.conf"
 
 	// KubeletBaseConfigurationConfigMapPrefix specifies in what ConfigMap in the kube-system namespace the initial remote configuration of kubelet should be stored
 	KubeletBaseConfigurationConfigMapPrefix = "kubelet-config-"
@@ -220,6 +236,9 @@ const (
 
 	// KubeletEnvFileVariableName specifies the shell script variable name "kubeadm init" should write a value to in KubeletEnvFile
 	KubeletEnvFileVariableName = "KUBELET_KUBEADM_ARGS"
+
+	// KubeletHealthzPort is the port of the kubelet healthz endpoint
+	KubeletHealthzPort = 10248
 
 	// MinExternalEtcdVersion indicates minimum external etcd version which kubeadm supports
 	MinExternalEtcdVersion = "3.2.17"
@@ -283,7 +302,10 @@ const (
 	KubeDNSVersion = "1.14.10"
 
 	// CoreDNSVersion is the version of CoreDNS to be deployed if it is used
-	CoreDNSVersion = "1.1.3"
+	CoreDNSVersion = "1.2.2"
+
+	// ClusterConfigurationKind is the string kind value for the ClusterConfiguration struct
+	ClusterConfigurationKind = "ClusterConfiguration"
 
 	// InitConfigurationKind is the string kind value for the InitConfiguration struct
 	InitConfigurationKind = "InitConfiguration"
@@ -302,6 +324,9 @@ const (
 	// YAMLDocumentSeparator is the separator for YAML documents
 	// TODO: Find a better place for this constant
 	YAMLDocumentSeparator = "---\n"
+
+	// DefaultAPIServerBindAddress is the default bind address for the API Server
+	DefaultAPIServerBindAddress = "0.0.0.0"
 )
 
 var (
@@ -450,4 +475,9 @@ func GetDNSVersion(dnsType string) string {
 	default:
 		return KubeDNSVersion
 	}
+}
+
+// GetKubeletConfigMapName returns the right ConfigMap name for the right branch of k8s
+func GetKubeletConfigMapName(k8sVersion *version.Version) string {
+	return fmt.Sprintf("%s%d.%d", KubeletBaseConfigurationConfigMapPrefix, k8sVersion.Major(), k8sVersion.Minor())
 }

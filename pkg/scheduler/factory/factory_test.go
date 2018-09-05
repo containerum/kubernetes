@@ -49,6 +49,7 @@ import (
 const (
 	enableEquivalenceCache = true
 	disablePodPreemption   = false
+	bindTimeoutSeconds     = 600
 )
 
 func TestCreate(t *testing.T) {
@@ -540,7 +541,7 @@ func TestSkipPodUpdate(t *testing.T) {
 
 func newConfigFactory(client *clientset.Clientset, hardPodAffinitySymmetricWeight int32) scheduler.Configurator {
 	informerFactory := informers.NewSharedInformerFactory(client, 0)
-	return NewConfigFactory(
+	return NewConfigFactory(&ConfigFactoryArgs{
 		v1.DefaultSchedulerName,
 		client,
 		informerFactory.Core().V1().Nodes(),
@@ -548,15 +549,17 @@ func newConfigFactory(client *clientset.Clientset, hardPodAffinitySymmetricWeigh
 		informerFactory.Core().V1().PersistentVolumes(),
 		informerFactory.Core().V1().PersistentVolumeClaims(),
 		informerFactory.Core().V1().ReplicationControllers(),
-		informerFactory.Extensions().V1beta1().ReplicaSets(),
-		informerFactory.Apps().V1beta1().StatefulSets(),
+		informerFactory.Apps().V1().ReplicaSets(),
+		informerFactory.Apps().V1().StatefulSets(),
 		informerFactory.Core().V1().Services(),
 		informerFactory.Policy().V1beta1().PodDisruptionBudgets(),
 		informerFactory.Storage().V1().StorageClasses(),
 		hardPodAffinitySymmetricWeight,
 		enableEquivalenceCache,
 		disablePodPreemption,
-	)
+		schedulerapi.DefaultPercentageOfNodesToScore,
+		bindTimeoutSeconds,
+	})
 }
 
 type fakeExtender struct {
